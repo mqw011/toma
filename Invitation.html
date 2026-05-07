@@ -504,29 +504,24 @@
   </div>
   <div class="photo-reel reveal">
     <div class="photo-reel-item">
-      <img src="assets/tamiris-3.jpg" alt="Тамирис" loading="lazy">
-      <span class="corner tl"></span><span class="corner br"></span>
-      <span class="cap">№ 01</span>
-    </div>
-    <div class="photo-reel-item">
       <img src="assets/tamiris-1.jpg" alt="Тамирис" loading="lazy">
       <span class="corner tl"></span><span class="corner br"></span>
-      <span class="cap">№ 02</span>
+    </div>
+    <div class="photo-reel-item">
+      <img src="assets/tamiris-3.jpg" alt="Тамирис" loading="lazy">
+      <span class="corner tl"></span><span class="corner br"></span>
     </div>
     <div class="photo-reel-item">
       <img src="assets/tamiris-4.jpg" alt="Тамирис" loading="lazy">
       <span class="corner tl"></span><span class="corner br"></span>
-      <span class="cap">№ 03</span>
     </div>
     <div class="photo-reel-item">
       <img src="assets/tamiris-5.jpg" alt="Тамирис" loading="lazy">
       <span class="corner tl"></span><span class="corner br"></span>
-      <span class="cap">№ 04</span>
     </div>
     <div class="photo-reel-item">
       <img src="assets/tamiris-2.jpg" alt="Тамирис" loading="lazy">
       <span class="corner tl"></span><span class="corner br"></span>
-      <span class="cap">№ 05 · қыз ұзату</span>
     </div>
   </div>
 </section>
@@ -766,8 +761,11 @@
     t._h = setTimeout(() => t.classList.remove('in'), 2600);
   }
 
-  document.getElementById('rsvp-form').addEventListener('submit', e => {
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwBi30ny9wm4xtGPSIjshSwzkpIQqJhrQ_Y5LCAJFisbTGBWS0cjm2tTxoh6a9LUHOidg/exec';
+
+  document.getElementById('rsvp-form').addEventListener('submit', async e => {
     e.preventDefault();
+    const btn = e.target.querySelector('.submit-btn');
     const fd = new FormData(e.target);
     const entry = {
       name: fd.get('name').trim(),
@@ -778,14 +776,29 @@
       ts: new Date().toISOString()
     };
     if (!entry.name || !entry.phone || !entry.attending) { showToast('Барлық өрістерді толтырыңыз'); return; }
-    const arr = loadGuests();
-    arr.push(entry);
-    saveGuests(arr);
-    e.target.reset();
-    document.querySelectorAll('.choice label').forEach(l => l.classList.remove('selected', 'declined'));
-    document.getElementById('guests-field').style.display = '';
-    renderList();
-    showToast(entry.attending === 'yes' ? 'Рахмет! Сіздерді күтеміз' : 'Рахмет, өкінішті :(');
+
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(entry)
+      });
+      const arr = loadGuests();
+      arr.push(entry);
+      saveGuests(arr);
+      e.target.reset();
+      document.querySelectorAll('.choice label').forEach(l => l.classList.remove('selected', 'declined'));
+      document.getElementById('guests-field').style.display = '';
+      renderList();
+      showToast(entry.attending === 'yes' ? 'Рахмет! Сіздерді күтеміз' : 'Рахмет, өкінішті :(');
+    } catch (err) {
+      showToast('Қате шықты, қайта көріңіз');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Жіберу';
+    }
   });
 
   document.getElementById('clear-list').addEventListener('click', () => {
