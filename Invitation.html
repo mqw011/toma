@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Forum&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root{
     --bordo:#7a1320;
@@ -387,35 +386,6 @@
     color:var(--bordo-soft);line-height:1.8;
   }
 
-  .rsvp-list{
-    margin-top:30px;max-width:440px;margin-left:auto;margin-right:auto;
-  }
-  .rsvp-list h4{
-    font-family:'JetBrains Mono',monospace;font-size:10px;
-    letter-spacing:.3em;text-transform:uppercase;color:var(--bordo-soft);
-    margin:0 0 10px;display:flex;align-items:center;gap:10px;
-  }
-  .rsvp-list h4 .count{
-    background:var(--bordo);color:var(--cream);padding:2px 8px;
-  }
-  .rsvp-list ul{list-style:none;padding:0;margin:0;border-top:1px solid var(--bordo-deep)}
-  .rsvp-list li{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:10px 4px;border-bottom:1px solid var(--bordo-deep);
-    font-family:'Spectral',serif;color:var(--bordo);font-size:14px;
-  }
-  .rsvp-list li .status{
-    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;
-    padding:2px 8px;border:1px solid;
-  }
-  .rsvp-list li .status.yes{color:var(--bordo-soft);border-color:var(--bordo-soft)}
-  .rsvp-list li .status.no{color:var(--bordo-soft);border-color:var(--bordo-soft)}
-
-  .export-bar{
-    display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
-    margin-top:14px;padding-top:14px;border-top:1px dashed var(--bordo-deep);
-  }
-  .export-bar .meta{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--cream-soft);text-transform:uppercase}
 
   /* ===== MARQUEE ===== */
   .marquee{
@@ -676,20 +646,6 @@
       </div>
     </div>
 
-    <div class="rsvp-list" id="rsvp-list" hidden>
-      <h4>
-        <span>Қонақтар тізімі</span>
-        <span class="count" id="rsvp-count">0</span>
-      </h4>
-      <ul id="rsvp-items"></ul>
-      <div class="export-bar">
-        <span class="meta">Сақталған: localStorage</span>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button type="button" class="btn-link" id="export-xlsx">⇩ Excel (.xlsx)</button>
-          <button type="button" class="btn-link" id="clear-list">Тазалау</button>
-        </div>
-      </div>
-    </div>
   </div>
 </section>
 
@@ -761,37 +717,6 @@
     });
   });
 
-  // ===== RSVP storage + render =====
-  const KEY = 'rsvp_tamiris_2026';
-  function loadGuests() {
-    try { return JSON.parse(localStorage.getItem(KEY) || '[]') } catch (e) { return [] }
-  }
-  function saveGuests(arr) { localStorage.setItem(KEY, JSON.stringify(arr)) }
-
-  function renderList() {
-    const arr = loadGuests();
-    const wrap = document.getElementById('rsvp-list');
-    const items = document.getElementById('rsvp-items');
-    const count = document.getElementById('rsvp-count');
-    if (!arr.length) { wrap.hidden = true; return; }
-    wrap.hidden = false;
-    items.innerHTML = '';
-    let yesCount = 0;
-    arr.forEach(g => {
-      if (g.attending === 'yes') yesCount += parseInt(g.guests) || 1;
-      const li = document.createElement('li');
-      li.innerHTML = `
-        <span>${escapeHtml(g.name)} · <span style="opacity:.6">${escapeHtml(g.phone || '')}</span></span>
-        <span class="status ${g.attending === 'yes' ? 'yes' : 'no'}">${g.attending === 'yes' ? '✓ ' + (g.guests || 1) : '✕ нет'}</span>
-      `;
-      items.appendChild(li);
-    });
-    count.textContent = `${arr.length} · ${yesCount} келеді`;
-  }
-
-  function escapeHtml(s) {
-    return (s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  }
 
   function showToast(msg) {
     const t = document.getElementById('toast');
@@ -825,13 +750,9 @@
         method: 'POST',
         body: JSON.stringify(entry)
       });
-      const arr = loadGuests();
-      arr.push(entry);
-      saveGuests(arr);
       e.target.reset();
       document.querySelectorAll('.choice label').forEach(l => l.classList.remove('selected', 'declined'));
       document.getElementById('guests-field').style.display = '';
-      renderList();
       e.target.style.display = 'none';
       document.getElementById('rsvp-success').classList.add('visible');
     } catch (err) {
@@ -842,33 +763,6 @@
     }
   });
 
-  document.getElementById('clear-list').addEventListener('click', () => {
-    if (confirm('Тізімді тазалау керек пе?')) {
-      saveGuests([]); renderList();
-    }
-  });
-
-  document.getElementById('export-xlsx').addEventListener('click', () => {
-    const arr = loadGuests();
-    if (!arr.length) { showToast('Тізім бос'); return; }
-    const rows = arr.map((g, i) => ({
-      '№': i + 1,
-      'Аты-жөні': g.name,
-      'Телефон': g.phone,
-      'Келеді?': g.attending === 'yes' ? 'Иә' : 'Жоқ',
-      'Қанша адам': g.guests,
-      'Тілек': g.wish,
-      'Уақыты': new Date(g.ts).toLocaleString('ru-RU')
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [{ wch: 4 }, { wch: 28 }, { wch: 18 }, { wch: 10 }, { wch: 12 }, { wch: 40 }, { wch: 20 }];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'RSVP');
-    XLSX.writeFile(wb, `RSVP_Tamiris_${new Date().toISOString().slice(0, 10)}.xlsx`);
-    showToast('Excel жүктелді');
-  });
-
-  renderList();
 </script>
 
 </body>
