@@ -362,6 +362,31 @@
   .submit-btn:hover{background:var(--bordo-soft);border-color:var(--bordo-soft)}
   .submit-btn:disabled{opacity:.6;cursor:not-allowed}
 
+  .rsvp-success{
+    display:none;
+    max-width:440px;margin:0 auto;
+    text-align:center;padding:28px 16px;
+  }
+  .rsvp-success.visible{display:block}
+  .rsvp-success-icon{
+    font-size:36px;margin-bottom:18px;
+  }
+  .rsvp-success-title{
+    font-family:'Forum',serif;letter-spacing:.2em;text-transform:uppercase;
+    font-size:18px;color:var(--bordo-soft);margin-bottom:12px;
+  }
+  .rsvp-success-text{
+    font-family:'Spectral',serif;font-size:15px;color:var(--bordo-deep);
+    line-height:1.7;margin-bottom:18px;
+  }
+  .rsvp-success-note{
+    border-top:1px solid rgba(199,154,58,.25);
+    padding-top:16px;margin-top:4px;
+    font-family:'JetBrains Mono',monospace;font-size:10px;
+    letter-spacing:.2em;text-transform:uppercase;
+    color:var(--bordo-soft);line-height:1.8;
+  }
+
   .rsvp-list{
     margin-top:30px;max-width:440px;margin-left:auto;margin-right:auto;
   }
@@ -636,6 +661,21 @@
       <button type="submit" class="submit-btn">Жіберу</button>
     </form>
 
+    <div class="rsvp-success" id="rsvp-success">
+      <div class="rsvp-success-icon">✓</div>
+      <div class="rsvp-success-title">Жауабыңыз қабылданды</div>
+      <div class="rsvp-success-text">
+        Барлығы тіркелді және сақталды.<br>
+        Жауабыңыз үшін рахмет!
+      </div>
+      <div class="rsvp-success-note">
+        Сондай-ақ, балаларды мейрамхана<br>
+        ішінде ұстамды және тыныш болуға<br>
+        шақырамыз — барша қонаққа<br>
+        ыңғайлы болсын деген ниетпен.
+      </div>
+    </div>
+
     <div class="rsvp-list" id="rsvp-list" hidden>
       <h4>
         <span>Қонақтар тізімі</span>
@@ -792,7 +832,8 @@
       document.querySelectorAll('.choice label').forEach(l => l.classList.remove('selected', 'declined'));
       document.getElementById('guests-field').style.display = '';
       renderList();
-      showToast(entry.attending === 'yes' ? 'Рахмет! Сіздерді күтеміз' : 'Рахмет, өкінішті :(');
+      e.target.style.display = 'none';
+      document.getElementById('rsvp-success').classList.add('visible');
     } catch (err) {
       showToast('Қате шықты, қайта көріңіз');
     } finally {
