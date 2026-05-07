@@ -420,6 +420,26 @@
   }
   footer .heart{color:var(--bordo-soft)}
 
+  /* ===== music btn ===== */
+  .music-btn{
+    position:fixed;bottom:24px;right:24px;z-index:100;
+    width:42px;height:42px;border-radius:50%;
+    background:rgba(74,10,19,.82);border:1px solid var(--bordo-soft);
+    color:var(--cream-soft);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;backdrop-filter:blur(8px);
+    transition:background .25s,transform .25s,opacity .25s;
+    opacity:.75;
+  }
+  .music-btn:hover{background:var(--bordo);opacity:1;transform:scale(1.08)}
+  .music-btn.playing .icon-play{display:none}
+  .music-btn.playing .icon-pause{display:flex}
+  .music-btn:not(.playing) .icon-play{display:flex}
+  .music-btn:not(.playing) .icon-pause{display:none}
+  .icon-play,.icon-pause{
+    align-items:center;justify-content:center;pointer-events:none;
+  }
+
   /* ===== toast ===== */
   .toast{
     position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120%);
@@ -679,6 +699,13 @@
   <div style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;color:var(--bordo-soft);text-transform:uppercase;font-style:normal">20 . 06 . 2026</div>
 </footer>
 
+<audio id="bg-audio" src="assets/bg-music.mp3" loop preload="none"></audio>
+
+<button class="music-btn" id="music-btn" title="Музыка">
+  <span class="icon-play">&#9654;</span>
+  <span class="icon-pause">&#10074;&#10074;</span>
+</button>
+
 <div class="toast" id="toast">Рахмет! Жауабыңыз сақталды</div>
 
 <script>
@@ -761,6 +788,35 @@
       btn.textContent = 'Жіберу';
     }
   });
+
+  // ===== Background music =====
+  const audio = document.getElementById('bg-audio');
+  const musicBtn = document.getElementById('music-btn');
+  audio.volume = 0.35;
+
+  musicBtn.addEventListener('click', () => {
+    if (audio.paused) {
+      audio.play();
+      musicBtn.classList.add('playing');
+    } else {
+      audio.pause();
+      musicBtn.classList.remove('playing');
+    }
+  });
+
+  // autoplay on first any interaction
+  let autoplayDone = false;
+  function tryAutoplay() {
+    if (autoplayDone) return;
+    autoplayDone = true;
+    audio.play().then(() => musicBtn.classList.add('playing')).catch(() => {});
+    document.removeEventListener('click', tryAutoplay);
+    document.removeEventListener('touchstart', tryAutoplay);
+    document.removeEventListener('scroll', tryAutoplay);
+  }
+  document.addEventListener('click', tryAutoplay, { once: true });
+  document.addEventListener('touchstart', tryAutoplay, { once: true });
+  document.addEventListener('scroll', tryAutoplay, { once: true });
 
 </script>
 
