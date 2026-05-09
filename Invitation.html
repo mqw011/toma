@@ -633,14 +633,15 @@
 
       <div class="field" id="guests-field">
         <label>Қанша адам келеді</label>
-        <select name="guests">
+        <select name="guests" id="guests-select">
           <option value="1">1 адам</option>
           <option value="2" selected>2 адам</option>
           <option value="3">3 адам</option>
           <option value="4">4 адам</option>
           <option value="5">5 адам</option>
-          <option value="6+">6+</option>
+          <option value="custom">6+ адам...</option>
         </select>
+        <input type="number" id="guests-custom" min="6" placeholder="Санды енгізіңіз" style="display:none;margin-top:8px;width:100%;padding:8px 12px;border:1px solid var(--bordo-soft);border-radius:6px;font-size:15px;background:var(--cream);color:var(--bordo);">
       </div>
 
       <div class="field">
@@ -733,6 +734,13 @@
   }
   tick(); setInterval(tick, 1000);
 
+  // ===== Guests custom input =====
+  document.getElementById('guests-select').addEventListener('change', function() {
+    const customInput = document.getElementById('guests-custom');
+    customInput.style.display = this.value === 'custom' ? '' : 'none';
+    if (this.value === 'custom') { customInput.value = ''; customInput.focus(); }
+  });
+
   // ===== Choice highlight =====
   document.querySelectorAll('.choice label').forEach(lbl => {
     lbl.addEventListener('click', () => {
@@ -758,11 +766,20 @@
     e.preventDefault();
     const btn = e.target.querySelector('.submit-btn');
     const fd = new FormData(e.target);
+    let guestsVal = '';
+    if (fd.get('attending') === 'yes') {
+      guestsVal = fd.get('guests');
+      if (guestsVal === 'custom') {
+        const n = parseInt(document.getElementById('guests-custom').value);
+        if (!n || n < 6) { showToast('Адам санын енгізіңіз (6 және одан көп)'); return; }
+        guestsVal = String(n);
+      }
+    }
     const entry = {
       name: fd.get('name').trim(),
       phone: fd.get('phone').trim(),
       attending: fd.get('attending'),
-      guests: fd.get('attending') === 'yes' ? fd.get('guests') : '',
+      guests: guestsVal,
       wish: (fd.get('wish') || '').trim(),
       ts: new Date().toISOString()
     };
@@ -779,6 +796,7 @@
       e.target.reset();
       document.querySelectorAll('.choice label').forEach(l => l.classList.remove('selected', 'declined'));
       document.getElementById('guests-field').style.display = '';
+      document.getElementById('guests-custom').style.display = 'none';
       e.target.style.display = 'none';
       document.getElementById('rsvp-success').classList.add('visible');
     } catch (err) {
